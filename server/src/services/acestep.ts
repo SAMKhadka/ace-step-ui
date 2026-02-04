@@ -1,5 +1,6 @@
-import { writeFile, mkdir, copyFile, rm, stat } from 'fs/promises';
+import { writeFile, mkdir, copyFile, rm, stat, access } from 'fs/promises';
 import { spawn, execSync } from 'child_process';
+import { existsSync } from 'fs';
 import path from 'path';
 
 // Get audio duration using ffprobe
@@ -33,6 +34,29 @@ function resolveAceStepPath(): string {
   }
   // Default: sibling directory
   return path.resolve(__dirname, '../../../../ACE-Step-1.5');
+}
+
+// Resolve Python path cross-platform (supports venv and portable installations)
+export function resolvePythonPath(baseDir: string): string {
+  // Allow explicit override via env var
+  if (process.env.PYTHON_PATH) {
+    return process.env.PYTHON_PATH;
+  }
+
+  const isWindows = process.platform === 'win32';
+  const pythonExe = isWindows ? 'python.exe' : 'python';
+
+  // Check for portable installation first (python_embeded)
+  const portablePath = path.join(baseDir, 'python_embeded', pythonExe);
+  if (existsSync(portablePath)) {
+    return portablePath;
+  }
+
+  // Standard venv path (different structure on Windows vs Unix)
+  if (isWindows) {
+    return path.join(baseDir, '.venv', 'Scripts', pythonExe);
+  }
+  return path.join(baseDir, '.venv', 'bin', 'python');
 }
 
 const ACESTEP_DIR = resolveAceStepPath();
@@ -431,8 +455,7 @@ interface PythonResult {
 
 function runPythonGeneration(scriptArgs: string[]): Promise<PythonResult> {
   return new Promise((resolve) => {
-    // Use the ACE-Step venv's Python directly
-    const pythonPath = path.join(ACESTEP_DIR, '.venv', 'bin', 'python');
+    const pythonPath = resolvePythonPath(ACESTEP_DIR);
     const args = [PYTHON_SCRIPT, ...scriptArgs];
 
     const proc = spawn(pythonPath, args, {

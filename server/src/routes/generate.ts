@@ -14,6 +14,7 @@ import {
   cleanupJob,
   getJobRawResponse,
   downloadAudioToBuffer,
+  resolvePythonPath,
 } from '../services/acestep.js';
 import { getStorageProvider } from '../services/storage/factory.js';
 
@@ -557,12 +558,12 @@ router.post('/format', authMiddleware, async (req: AuthenticatedRequest, res: Re
 
     const { spawn } = await import('child_process');
 
-    const ACESTEP_DIR = process.env.ACESTEP_PATH || '/home/ambsd/Desktop/aceui/ACE-Step-1.5';
+    const ACESTEP_DIR = process.env.ACESTEP_PATH || path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../../ACE-Step-1.5');
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
     const SCRIPTS_DIR = path.join(__dirname, '../../scripts');
     const FORMAT_SCRIPT = path.join(SCRIPTS_DIR, 'format_sample.py');
-    const pythonPath = path.join(ACESTEP_DIR, '.venv', 'bin', 'python');
+    const pythonPath = resolvePythonPath(ACESTEP_DIR);
 
     const args = [
       FORMAT_SCRIPT,
