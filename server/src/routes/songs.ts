@@ -398,7 +398,7 @@ router.patch('/:id', authMiddleware, async (req: AuthenticatedRequest, res: Resp
 // Delete song
 router.delete('/:id', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const check = await pool.query('SELECT user_id FROM songs WHERE id = $1', [req.params.id]);
+    const check = await pool.query('SELECT user_id, audio_url, cover_url FROM songs WHERE id = $1', [req.params.id]);
     if (check.rows.length === 0) {
       res.status(404).json({ error: 'Song not found' });
       return;
@@ -408,25 +408,30 @@ router.delete('/:id', authMiddleware, async (req: AuthenticatedRequest, res: Res
       return;
     }
 
-    const audioFileResult = await pool.query(
-      'SELECT id, storage_key, storage_provider FROM audio_files WHERE song_id = $1 AND deleted_at IS NULL',
-      [req.params.id]
-    );
+    const song = check.rows[0];
+    const storage = getStorageProvider();
 
-    if (audioFileResult.rows.length > 0) {
-      const storage = getStorageProvider();
-      for (const audioFile of audioFileResult.rows) {
-        try {
-          await storage.delete(audioFile.storage_key);
-        } catch (err) {
-          console.error(`Failed to delete storage file ${audioFile.storage_key}:`, err);
-        }
+    // Delete audio file from storage
+    if (song.audio_url) {
+      try {
+        // Handle local storage paths (/audio/filename.mp3 -> filename.mp3)
+        const storageKey = song.audio_url.startsWith('/audio/')
+          ? song.audio_url.replace('/audio/', '')
+          : song.audio_url.replace('s3://', '');
+        await storage.delete(storageKey);
+      } catch (err) {
+        console.error(`Failed to delete audio file ${song.audio_url}:`, err);
       }
+    }
 
-      await pool.query(
-        'UPDATE audio_files SET deleted_at = CURRENT_TIMESTAMP WHERE song_id = $1',
-        [req.params.id]
-      );
+    // Delete cover image if it's stored locally
+    if (song.cover_url && song.cover_url.startsWith('/audio/')) {
+      try {
+        const coverKey = song.cover_url.replace('/audio/', '');
+        await storage.delete(coverKey);
+      } catch (err) {
+        console.error(`Failed to delete cover ${song.cover_url}:`, err);
+      }
     }
 
     await pool.query('DELETE FROM songs WHERE id = $1', [req.params.id]);
