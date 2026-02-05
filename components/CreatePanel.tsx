@@ -133,6 +133,7 @@ export const CreatePanel: React.FC<CreatePanelProps> = ({ onGenerate, isGenerati
   const [audioFormat, setAudioFormat] = useState<'mp3' | 'flac'>('mp3');
   const [inferenceSteps, setInferenceSteps] = useState(8);
   const [inferMethod, setInferMethod] = useState<'ode' | 'sde'>('ode');
+  const [lmBackend, setLmBackend] = useState<'pt' | 'vllm'>('pt');
   const [shift, setShift] = useState(3.0);
 
   // LM Parameters (under Expert)
@@ -535,6 +536,7 @@ export const CreatePanel: React.FC<CreatePanelProps> = ({ onGenerate, isGenerati
         thinking,
         audioFormat,
         inferMethod,
+        lmBackend,
         shift,
         lmTemperature,
         lmCfgScale,
@@ -1296,6 +1298,20 @@ export const CreatePanel: React.FC<CreatePanelProps> = ({ onGenerate, isGenerati
                   <option value="sde">SDE (stochastic)</option>
                 </select>
               </div>
+            </div>
+
+            {/* LM Backend */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">LM Backend</label>
+              <select
+                value={lmBackend}
+                onChange={(e) => setLmBackend(e.target.value as 'pt' | 'vllm')}
+                className="w-full bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-white/10 rounded-lg px-2 py-1.5 text-xs text-zinc-900 dark:text-white focus:outline-none"
+              >
+                <option value="pt">PT (~1.6 GB VRAM)</option>
+                <option value="vllm">VLLM (~9.2 GB VRAM)</option>
+              </select>
+              <p className="text-[10px] text-zinc-500">PT uses less VRAM, VLLM may be faster on powerful GPUs</p>
             </div>
 
             {/* Seed */}

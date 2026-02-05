@@ -596,6 +596,7 @@ export default function App() {
         lmTopK: params.lmTopK,
         lmTopP: params.lmTopP,
         lmNegativePrompt: params.lmNegativePrompt,
+        lmBackend: params.lmBackend,
         referenceAudioUrl: params.referenceAudioUrl,
         sourceAudioUrl: params.sourceAudioUrl,
         audioCodes: params.audioCodes,

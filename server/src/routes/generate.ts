@@ -90,6 +90,7 @@ interface GenerateBody {
   lmTopK?: number;
   lmTopP?: number;
   lmNegativePrompt?: string;
+  lmBackend?: 'pt' | 'vllm';
 
   // Expert Parameters
   referenceAudioUrl?: string;
@@ -189,6 +190,7 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
       lmTopK,
       lmTopP,
       lmNegativePrompt,
+      lmBackend,
       referenceAudioUrl,
       sourceAudioUrl,
       audioCodes,
@@ -252,6 +254,7 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
       lmTopK,
       lmTopP,
       lmNegativePrompt,
+      lmBackend,
       referenceAudioUrl,
       sourceAudioUrl,
       audioCodes,

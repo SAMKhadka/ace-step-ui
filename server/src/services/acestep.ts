@@ -137,6 +137,7 @@ async function submitToApi(params: GenerationParams): Promise<{ taskId: string }
     use_cot_caption: false, // Explicitly disable CoT features that require LLM
     use_cot_language: false, // Explicitly disable CoT features that require LLM
     use_cot_metas: false, // Explicitly disable CoT features that require LLM
+    lm_backend: params.lmBackend || 'pt',
   };
 
   if (params.bpm && params.bpm > 0) body.bpm = params.bpm;
@@ -150,7 +151,12 @@ async function submitToApi(params: GenerationParams): Promise<{ taskId: string }
   if (params.audioCodes) body.audio_code_string = params.audioCodes;
   if (params.repaintingStart !== undefined && params.repaintingStart > 0) body.repainting_start = params.repaintingStart;
   if (params.repaintingEnd !== undefined && params.repaintingEnd > 0) body.repainting_end = params.repaintingEnd;
-  if (params.audioCoverStrength !== undefined && params.audioCoverStrength !== 1.0) body.audio_cover_strength = params.audioCoverStrength;
+  // Always send audio_cover_strength for cover/repaint tasks, otherwise only when not default
+  if (params.taskType === 'cover' || params.taskType === 'repaint' || params.sourceAudioUrl) {
+    body.audio_cover_strength = params.audioCoverStrength ?? 1.0;
+  } else if (params.audioCoverStrength !== undefined && params.audioCoverStrength !== 1.0) {
+    body.audio_cover_strength = params.audioCoverStrength;
+  }
   if (params.instruction) body.instruction = params.instruction;
   // LLM and CoT parameters only sent when thinking mode is enabled
   if (params.thinking) {
@@ -340,6 +346,7 @@ export interface GenerationParams {
   lmTopK?: number;
   lmTopP?: number;
   lmNegativePrompt?: string;
+  lmBackend?: 'pt' | 'vllm';
 
   // Expert Parameters
   referenceAudioUrl?: string;
@@ -603,7 +610,12 @@ async function processGeneration(
     if (params.audioCodes) args.push('--audio-codes', params.audioCodes);
     if (params.repaintingStart !== undefined && params.repaintingStart > 0) args.push('--repainting-start', String(params.repaintingStart));
     if (params.repaintingEnd !== undefined && params.repaintingEnd > 0) args.push('--repainting-end', String(params.repaintingEnd));
-    if (params.audioCoverStrength !== undefined && params.audioCoverStrength !== 1.0) args.push('--audio-cover-strength', String(params.audioCoverStrength));
+    // Always send audio_cover_strength for cover/repaint tasks, otherwise only when not default
+    if (params.taskType === 'cover' || params.taskType === 'repaint' || params.sourceAudioUrl) {
+      args.push('--audio-cover-strength', String(params.audioCoverStrength ?? 1.0));
+    } else if (params.audioCoverStrength !== undefined && params.audioCoverStrength !== 1.0) {
+      args.push('--audio-cover-strength', String(params.audioCoverStrength));
+    }
     if (params.instruction) args.push('--instruction', params.instruction);
     if (params.thinking) args.push('--thinking');
     if (params.lmTemperature !== undefined) args.push('--lm-temperature', String(params.lmTemperature));
@@ -611,6 +623,7 @@ async function processGeneration(
     if (params.lmTopK !== undefined && params.lmTopK > 0) args.push('--lm-top-k', String(params.lmTopK));
     if (params.lmTopP !== undefined) args.push('--lm-top-p', String(params.lmTopP));
     if (params.lmNegativePrompt) args.push('--lm-negative-prompt', params.lmNegativePrompt);
+    if (params.lmBackend) args.push('--lm-backend', params.lmBackend);
     if (params.useCotMetas === false) args.push('--no-cot-metas');
     if (params.useCotCaption === false) args.push('--no-cot-caption');
     if (params.useCotLanguage === false) args.push('--no-cot-language');

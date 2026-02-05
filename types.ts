@@ -83,6 +83,7 @@ export interface GenerationParams {
   lmTopK: number;
   lmTopP: number;
   lmNegativePrompt: string;
+  lmBackend?: 'pt' | 'vllm';
 
   // Expert Parameters
   referenceAudioUrl?: string;
