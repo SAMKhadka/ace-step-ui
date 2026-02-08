@@ -106,6 +106,7 @@ export interface Song {
   user_id?: string;
   created_at: string;
   creator?: string;
+  ditModel?: string;
   generation_params?: any;
 }
 
@@ -155,8 +156,46 @@ export const songsApi = {
   createSong: (song: Partial<Song>, token: string): Promise<{ song: Song }> =>
     api('/api/songs', { method: 'POST', body: song, token }),
 
-  updateSong: (id: string, updates: Partial<Song>, token: string): Promise<{ song: Song }> =>
-    api(`/api/songs/${id}`, { method: 'PATCH', body: updates, token }),
+  updateSong: async (id: string, updates: Partial<Song>, token: string): Promise<{ song: any }> => {
+    const result = await api(`/api/songs/${id}`, { method: 'PATCH', body: updates, token }) as { song: any };
+    const s = result.song;
+    const rawUrl = s.audio_url || s.audioUrl;
+    const resolvedUrl = getAudioUrl(rawUrl, s.id);
+
+    return {
+      song: {
+        id: s.id,
+        title: s.title,
+        lyrics: s.lyrics,
+        style: s.style,
+        caption: s.caption,
+        cover_url: s.cover_url,
+        coverUrl: s.cover_url || s.coverUrl || `https://picsum.photos/seed/${s.id}/400/400`,
+        duration: s.duration && s.duration > 0 ? `${Math.floor(s.duration / 60)}:${String(Math.floor(s.duration % 60)).padStart(2, '0')}` : '0:00',
+        createdAt: new Date(s.created_at || s.createdAt),
+        created_at: s.created_at,
+        tags: s.tags || [],
+        audioUrl: resolvedUrl,
+        audio_url: resolvedUrl,
+        isPublic: s.is_public ?? s.isPublic,
+        is_public: s.is_public ?? s.isPublic,
+        likeCount: s.like_count || s.likeCount || 0,
+        like_count: s.like_count || s.likeCount || 0,
+        viewCount: s.view_count || s.viewCount || 0,
+        view_count: s.view_count || s.viewCount || 0,
+        userId: s.user_id || s.userId,
+        user_id: s.user_id || s.userId,
+        creator: s.creator,
+        creator_avatar: s.creator_avatar,
+        ditModel: s.dit_model || s.ditModel,
+        isGenerating: s.isGenerating,
+        queuePosition: s.queuePosition,
+        bpm: s.bpm,
+        key_scale: s.key_scale,
+        time_signature: s.time_signature,
+      }
+    };
+  },
 
   deleteSong: (id: string, token: string): Promise<{ success: boolean }> =>
     api(`/api/songs/${id}`, { method: 'DELETE', token }),
@@ -205,6 +244,9 @@ export interface GenerationParams {
   lyrics: string;
   style: string;
   title: string;
+
+  // Model Selection
+  ditModel?: string;
 
   // Common
   instrumental: boolean;
@@ -264,6 +306,7 @@ export interface GenerationParams {
   trackName?: string;
   completeTrackClasses?: string[];
   isFormatCaption?: boolean;
+  loraLoaded?: boolean;
 }
 
 export interface GenerationJob {
@@ -321,27 +364,35 @@ export const generateApi = {
     lmModel?: string;
     lmBackend?: string;
   }, token: string): Promise<{
-    success: boolean;
     caption?: string;
     lyrics?: string;
     bpm?: number;
     duration?: number;
     key_scale?: string;
-    language?: string;
+    vocal_language?: string;
     time_signature?: string;
     status_message?: string;
     error?: string;
   }> => api('/api/generate/format', { method: 'POST', body: params, token }),
 
-  // LoRA management (requires ACE-Step training fork)
-  loadLora: (params: { lora_path: string }, token: string): Promise<{ message: string }> =>
-    api('/api/generate/lora/load', { method: 'POST', body: params, token }),
+  // LoRA Inference (requires ACE-Step training fork)
+  loadLora: (params: {
+    lora_path: string;
+  }, token: string): Promise<{
+    message: string;
+    lora_path: string;
+  }> => api('/api/lora/load', { method: 'POST', body: params, token }),
 
-  unloadLora: (token: string): Promise<{ message: string }> =>
-    api('/api/generate/lora/unload', { method: 'POST', token }),
+  unloadLora: (token: string): Promise<{
+    message: string;
+  }> => api('/api/lora/unload', { method: 'POST', token }),
 
-  setLoraScale: (params: { scale: number }, token: string): Promise<{ message: string }> =>
-    api('/api/generate/lora/scale', { method: 'POST', body: params, token }),
+  setLoraScale: (params: {
+    scale: number;
+  }, token: string): Promise<{
+    message: string;
+    scale: number;
+  }> => api('/api/lora/scale', { method: 'POST', body: params, token }),
 };
 
 // Users API
